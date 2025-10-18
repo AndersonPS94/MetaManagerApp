@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
+    id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
 }
 
@@ -35,9 +36,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+
     buildFeatures {
         compose = true
     }
@@ -48,9 +47,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
 
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
-    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:5.2.1")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
 
@@ -67,6 +66,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    implementation("com.google.dagger:hilt-android:2.44")
+    ksp("com.google.dagger:hilt-compiler:2.44")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+
     testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("io.mockk:mockk:1.14.6")
@@ -76,4 +79,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+kotlin {
+    jvmToolchain(11)
 }
