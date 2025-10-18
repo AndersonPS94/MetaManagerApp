@@ -36,7 +36,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     buildFeatures {
         compose = true
     }
@@ -69,6 +68,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.44")
     ksp("com.google.dagger:hilt-compiler:2.44")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
+    implementation("androidx.work:work-runtime-ktx:2.10.5")
 
     testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
