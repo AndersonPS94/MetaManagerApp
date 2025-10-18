@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "143551196673",
+    "project_id": "meta-manager-f8c7c",
+    "storage_bucket": "meta-manager-f8c7c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:143551196673:android:5f91e52f24867db9589a00",
+        "android_client_info": {
+          "package_name": "com.desafiodevspace.metamanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADTQE30dECPxuqP2FZCca9jyzPFnsmX1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
