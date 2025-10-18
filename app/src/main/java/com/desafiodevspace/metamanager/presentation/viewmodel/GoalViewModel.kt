@@ -1,0 +1,185 @@
+package com.desafiodevspace.metamanager.presentation.viewmodel
+
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.desafiodevspace.metamanager.data.model.DailyTask
+import com.desafiodevspace.metamanager.data.model.Goal
+import com.desafiodevspace.metamanager.data.model.Task
+import com.desafiodevspace.metamanager.domain.usecase.AddGoalUseCase
+import com.desafiodevspace.metamanager.domain.usecase.DeleteGoalUseCase
+import com.desafiodevspace.metamanager.domain.usecase.GeneratePlanUseCase
+import com.desafiodevspace.metamanager.domain.usecase.GetAllGoalsUseCase
+import com.desafiodevspace.metamanager.domain.usecase.GetHelpUseCase
+import com.desafiodevspace.metamanager.domain.usecase.ShareUseCase
+import com.desafiodevspace.metamanager.domain.usecase.UpdateGoalUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import javax.inject.Inject
+
+@HiltViewModel
+class GoalViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val getAllGoalsUseCase: GetAllGoalsUseCase,
+    private val addGoalUseCase: AddGoalUseCase,
+    private val updateGoalUseCase: UpdateGoalUseCase,
+    private val deleteGoalUseCase: DeleteGoalUseCase,
+    private val generatePlanUseCase: GeneratePlanUseCase,
+    private val getHelpUseCase: GetHelpUseCase,
+    private val shareUseCase: ShareUseCase
+) : ViewModel() {
+
+    private val _goals = MutableStateFlow<List<Goal>>(emptyList())
+    val goals: StateFlow<List<Goal>> = _goals.asStateFlow()
+
+    private val _helpSuggestion = MutableStateFlow<String?>(null)
+    val helpSuggestion: StateFlow<String?> = _helpSuggestion.asStateFlow()
+
+    private val _generatedPlan = MutableStateFlow<String?>(null)
+    val generatedPlan: StateFlow<String?> = _generatedPlan.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private var tempGoal: Goal? = null
+
+    init {
+        loadGoals()
+    }
+
+    private fun loadGoals() {
+        viewModelScope.launch {
+            getAllGoalsUseCase().collect { _goals.value = it }
+        }
+    }
+
+    fun generatePlanForNewGoal(goal: Goal) {
+        tempGoal = goal
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val targetDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(goal.targetDate.toDate())
+                _generatedPlan.value = generatePlanUseCase(goal.title, targetDate)
+            } catch (e: Exception) {
+                // Handle error
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun regeneratePlan() {
+        tempGoal?.let { generatePlanForNewGoal(it) }
+    }
+
+    fun saveGeneratedPlan() {
+        viewModelScope.launch {
+            val planText = _generatedPlan.value ?: return@launch
+            val goalToSave = tempGoal ?: return@launch
+
+            val dailyTasks = parsePlanToDailyTasks(planText)
+            val finalGoal = goalToSave.copy(dailyTasks = dailyTasks)
+
+            addGoalUseCase(finalGoal)
+            tempGoal = null // Limpa a meta temporária
+            _generatedPlan.value = null // Limpa o plano gerado
+        }
+    }
+
+    fun updateGoal(goal: Goal) {
+        viewModelScope.launch { updateGoalUseCase(goal) }
+    }
+
+    fun deleteGoal(goal: Goal) {
+        viewModelScope.launch { deleteGoalUseCase(goal) }
+    }
+
+    fun toggleTaskCompletion(goal: Goal, dailyTask: DailyTask, taskToToggle: Task) {
+        val updatedGoal = goal.copy(
+            dailyTasks = goal.dailyTasks.map {
+                if (it.day == dailyTask.day) {
+                    it.copy(tasks = it.tasks.map { task ->
+                        if (task == taskToToggle) task.copy(isCompleted = !task.isCompleted) else task
+                    })
+                } else {
+                    it
+                }
+            }
+        )
+        updateGoal(updatedGoal)
+    }
+
+    fun addTask(goal: Goal, dailyTask: DailyTask, description: String) {
+        if (description.isBlank()) return
+        val newTask = Task(description = description)
+        val updatedGoal = goal.copy(
+            dailyTasks = goal.dailyTasks.map {
+                if (it.day == dailyTask.day) {
+                    it.copy(tasks = it.tasks + newTask)
+                } else {
+                    it
+                }
+            }
+        )
+        updateGoal(updatedGoal)
+    }
+
+    fun removeTask(goal: Goal, dailyTask: DailyTask, taskToRemove: Task) {
+        val updatedGoal = goal.copy(
+            dailyTasks = goal.dailyTasks.map {
+                if (it.day == dailyTask.day) {
+                    it.copy(tasks = it.tasks - taskToRemove)
+                } else {
+                    it
+                }
+            }
+        )
+        updateGoal(updatedGoal)
+    }
+
+    fun getHelp(goal: Goal, situation: String) {
+        viewModelScope.launch {
+            try {
+                _helpSuggestion.value = getHelpUseCase(goal, situation)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun clearHelpSuggestion() {
+        _helpSuggestion.value = null
+    }
+
+    fun shareGoal(goal: Goal) {
+        shareUseCase(context, goal)
+    }
+
+    private fun parsePlanToDailyTasks(planText: String): List<DailyTask> {
+        val dailyTasks = mutableListOf<DailyTask>()
+        val days = planText.split("Dia ").filter { it.isNotBlank() }
+
+        for (dayContent in days) {
+            val lines = dayContent.lines()
+            val dayNumber = lines.firstOrNull()?.substringBefore(":")?.trim()?.toIntOrNull() ?: continue
+            
+            val tasks = lines.drop(1).mapNotNull { taskLine ->
+                val description = taskLine.removePrefix("-").trim()
+                if (description.isNotEmpty()) {
+                    Task(description = description)
+                } else {
+                    null
+                }
+            }
+            dailyTasks.add(DailyTask(day = dayNumber, tasks = tasks))
+        }
+        return dailyTasks
+    }
+}
