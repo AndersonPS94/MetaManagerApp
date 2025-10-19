@@ -30,7 +30,8 @@ class MainActivity : ComponentActivity() {
                         BottomAppBar {
                             val navBackStackEntry by navController.currentBackStackEntryAsState()
                             val currentDestination = navBackStackEntry?.destination
-                            val items = listOf(BottomNavItem.Home, BottomNavItem.Progress)
+                            // CORREÇÃO: Removido o item de progresso da barra de navegação.
+                            val items = listOf(BottomNavItem.Home)
 
                             items.forEach { screen ->
                                 val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
@@ -40,12 +41,15 @@ class MainActivity : ComponentActivity() {
                                     label = { Text(screen.label) },
                                     selected = isSelected,
                                     onClick = {
-                                        navController.navigate(screen.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
+                                        // A navegação para Home já está correta e será mantida.
+                                        if (!isSelected) {
+                                            navController.navigate(screen.route) {
+                                                popUpTo(navController.graph.findStartDestination().id) {
+                                                    saveState = true
+                                                }
+                                                launchSingleTop = true
+                                                restoreState = true
                                             }
-                                            launchSingleTop = true
-                                            restoreState = true
                                         }
                                     }
                                 )
