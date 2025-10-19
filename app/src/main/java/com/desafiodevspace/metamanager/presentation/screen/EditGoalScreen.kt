@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,42 +21,83 @@ import com.desafiodevspace.metamanager.presentation.viewmodel.GoalViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditGoalScreen(
-    navController: NavController? = null,
-    goalId: String? = null,
+    navController: NavController,
+    goalId: String?,
     viewModel: GoalViewModel = hiltViewModel()
 ) {
     val goals by viewModel.goals.collectAsState()
-    val goal = goals.find { it.id == goalId }
+    val originalGoal = goals.find { it.id == goalId }
+
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+
+    // Atualiza os estados locais quando a meta original for carregada
+    LaunchedEffect(originalGoal) {
+        originalGoal?.let {
+            title = it.title
+            description = it.description
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Editar Plano Diário") },
+                title = { Text("Editar Meta") },
                 navigationIcon = {
-                    IconButton(onClick = { navController?.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 }
             )
         }
     ) { padding ->
-        if (goal != null) {
+        if (originalGoal != null) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(16.dp)
             ) {
-                items(goal.dailyTasks, key = { it.day }) { dailyTask ->
-                    DailyTaskEditor(goal = goal, dailyTask = dailyTask, viewModel = viewModel)
+                item {
+                    Column {
+                        OutlinedTextField(
+                            value = title,
+                            onValueChange = { title = it },
+                            label = { Text("Título da Meta") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            label = { Text("Descrição") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider()
+                    }
                 }
+
+                items(originalGoal.dailyTasks, key = { it.day }) { dailyTask ->
+                    DailyTaskEditor(goal = originalGoal, dailyTask = dailyTask, viewModel = viewModel)
+                }
+
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = { navController?.popBackStack() },
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                        onClick = {
+                            val updatedGoal = originalGoal.copy(
+                                title = title,
+                                description = description
+                            )
+                            viewModel.updateGoal(updatedGoal)
+                            navController.popBackStack()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        enabled = title.isNotBlank()
                     ) {
-                        Text("Concluído")
+                        Text("Salvar Alterações")
                     }
                 }
             }
@@ -100,7 +141,6 @@ private fun DailyTaskEditor(
                 }
             }
 
-            // UI para adicionar nova tarefa
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)

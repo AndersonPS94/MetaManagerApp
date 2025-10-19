@@ -20,7 +20,7 @@ interface GoalDao {
     suspend fun insert(goal: Goal)
 
     @Delete
-    suspend fun delete(goal: Goal) // Esta função estava faltando
+    suspend fun delete(goal: Goal)
 
     @Query("DELETE FROM goals")
     suspend fun deleteAll()

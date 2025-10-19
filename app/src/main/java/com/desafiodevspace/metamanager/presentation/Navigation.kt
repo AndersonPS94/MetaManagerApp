@@ -23,8 +23,20 @@ fun Navigation(navController: NavHostController, modifier: Modifier = Modifier) 
         composable("add_goal") {
             AddGoalScreen(navController = navController)
         }
-        composable("generated_plan") {
-            GeneratedPlanScreen(navController = navController)
+        composable(
+            route = "generated_plan/{title}/{description}/{targetDateMillis}",
+            arguments = listOf(
+                navArgument("title") { type = NavType.StringType },
+                navArgument("description") { type = NavType.StringType },
+                navArgument("targetDateMillis") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            GeneratedPlanScreen(
+                navController = navController,
+                title = backStackEntry.arguments?.getString("title"),
+                description = backStackEntry.arguments?.getString("description"),
+                targetDateMillis = backStackEntry.arguments?.getLong("targetDateMillis")
+            )
         }
         composable(
             route = "goal_detail/{goalId}",

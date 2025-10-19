@@ -93,7 +93,6 @@ class GoalViewModel @Inject constructor(
     fun saveGeneratedPlan() {
         viewModelScope.launch {
             val planText = _generatedPlan.value ?: return@launch
-            // Não salvar se o plano for uma mensagem de erro
             if (planText.startsWith("Erro:")) return@launch
 
             val goalToSave = tempGoal ?: return@launch
@@ -128,7 +127,6 @@ class GoalViewModel @Inject constructor(
                 }
             }
         )
-        // Chamada direta para a função que já gerencia o escopo da corrotina
         updateGoal(updatedGoal)
     }
 
@@ -204,9 +202,7 @@ class GoalViewModel @Inject constructor(
     }
 
     private fun scheduleDailyNotifications() {
-        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
-            .build()
-
+        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS).build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             "daily_goal_notification",
             ExistingPeriodicWorkPolicy.KEEP,
@@ -216,22 +212,35 @@ class GoalViewModel @Inject constructor(
 
     private fun parsePlanToDailyTasks(planText: String): List<DailyTask> {
         val dailyTasks = mutableListOf<DailyTask>()
-        val days = planText.split("Dia ", "Passo ").filter { it.isNotBlank() }
+        val cleanedText = planText.replace("*", "").trim()
+        val lines = cleanedText.lines().filter { it.isNotBlank() }
 
-        for (dayContent in days) {
-            val lines = dayContent.lines()
-            val dayNumber = lines.firstOrNull()?.substringBefore(":")?.trim()?.toIntOrNull() ?: continue
-            
-            val tasks = lines.drop(1).mapNotNull { taskLine ->
-                val description = taskLine.removePrefix("-").trim()
-                if (description.isNotEmpty()) {
-                    Task(description = description)
-                } else {
-                    null
+        var currentDay = -1
+        val currentTasks = mutableListOf<Task>()
+
+        lines.forEach { line ->
+            val trimmedLine = line.trim()
+            if (trimmedLine.startsWith("Dia", ignoreCase = true)) {
+                // Salva o dia anterior antes de começar um novo
+                if (currentDay != -1 && currentTasks.isNotEmpty()) {
+                    dailyTasks.add(DailyTask(day = currentDay, tasks = currentTasks.toList()))
+                    currentTasks.clear()
+                }
+                currentDay = trimmedLine.substringAfter("Dia").substringBefore(":").trim().toIntOrNull() ?: -1
+            } else if (currentDay != -1 && trimmedLine.firstOrNull()?.isDigit() == true) {
+                // Linha de tarefa (começa com "1.", "2.", etc.)
+                val taskDescription = trimmedLine.substringAfter(".").trim()
+                if (taskDescription.isNotEmpty()) {
+                    currentTasks.add(Task(description = taskDescription))
                 }
             }
-            dailyTasks.add(DailyTask(day = dayNumber, tasks = tasks))
         }
+
+        // Salva o último dia
+        if (currentDay != -1 && currentTasks.isNotEmpty()) {
+            dailyTasks.add(DailyTask(day = currentDay, tasks = currentTasks.toList()))
+        }
+
         return dailyTasks
     }
 }

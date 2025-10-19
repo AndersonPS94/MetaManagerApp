@@ -16,9 +16,9 @@ class HelpRepositoryImpl @Inject constructor(
     override suspend fun getReplan(goal: Goal, userSituation: String): String {
         val prompt = createPromptForReplan(goal, userSituation)
         val request = OpenAIRequest(
-            model = "text-davinci-003", // ou outro modelo como "gpt-3.5-turbo-instruct"
+            model = "text-davinci-003",
             prompt = prompt,
-            maxTokens = 250, // Aumentado para permitir planos mais detalhados
+            maxTokens = 250,
             temperature = 0.7
         )
 

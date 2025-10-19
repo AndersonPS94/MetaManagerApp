@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
                             val navBackStackEntry by navController.currentBackStackEntryAsState()
                             val currentDestination = navBackStackEntry?.destination
                             // CORREÇÃO: Removido o item de progresso da barra de navegação.
-                            val items = listOf(BottomNavItem.Home)
+                            val items = emptyList<BottomNavItem>()
 
                             items.forEach { screen ->
                                 val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true

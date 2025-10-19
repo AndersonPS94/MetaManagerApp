@@ -8,17 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.desafiodevspace.metamanager.data.model.Goal
-import com.desafiodevspace.metamanager.presentation.viewmodel.GoalViewModel
-import com.google.firebase.Timestamp
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,8 +24,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoalScreen(
-    navController: NavController,
-    viewModel: GoalViewModel = hiltViewModel()
+    navController: NavController
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -41,7 +38,7 @@ fun AddGoalScreen(
                 title = { Text("Criar Nova Meta") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 }
             )
@@ -84,18 +81,15 @@ fun AddGoalScreen(
                 Text(text = selectedDate?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it) } ?: "Selecionar Data Alvo")
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Empurra o botão para baixo
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
-                    selectedDate?.let {
-                        val goal = Goal(
-                            title = title,
-                            description = description,
-                            targetDate = Timestamp(it)
-                        )
-                        viewModel.generatePlanForNewGoal(goal)
-                        navController.navigate("generated_plan")
+                    selectedDate?.let { date ->
+                        val targetDateMillis = date.time
+                        val encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8.toString())
+                        val encodedDescription = URLEncoder.encode(description, StandardCharsets.UTF_8.toString())
+                        navController.navigate("generated_plan/$encodedTitle/$encodedDescription/$targetDateMillis")
                     }
                 },
                 enabled = title.isNotBlank() && selectedDate != null,
