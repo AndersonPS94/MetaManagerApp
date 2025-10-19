@@ -1,112 +1,141 @@
 package com.desafiodevspace.metamanager.presentation.screen
 
-import android.app.DatePickerDialog
-import android.widget.DatePicker
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import com.desafiodevspace.metamanager.data.model.Goal
-import com.desafiodevspace.metamanager.presentation.viewmodel.GoalViewModel
-import com.google.firebase.Timestamp
-import java.util.*
+import com.desafiodevspace.metamanager.presentation.viewmodel.AddGoalViewModel
+import com.desafiodevspace.metamanager.presentation.viewmodel.AddGoalState
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddGoalScreen(
-    navController: NavController,
-    viewModel: GoalViewModel = hiltViewModel()
+    viewModel: AddGoalViewModel = hiltViewModel(),
+    onGoalAdded: (String) -> Unit
 ) {
-    val title = remember { mutableStateOf("") }
-    val description = remember { mutableStateOf("") }
-    val targetDate = remember { mutableStateOf(Date()) }
-    val context = LocalContext.current
+    val addGoalState by viewModel.addGoalState.collectAsState()
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val datePickerState = rememberDatePickerState()
+    var selectedDate by remember { mutableStateOf<Date?>(null) }
 
-    val calendar = Calendar.getInstance()
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            calendar.set(year, month, dayOfMonth)
-            targetDate.value = calendar.time
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH)
-    )
+    LaunchedEffect(addGoalState) {
+        when (val state = addGoalState) {
+            is AddGoalState.Success -> {
+                onGoalAdded(state.goalId)
+            }
+            is AddGoalState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Nova Meta", fontWeight = FontWeight.Bold) },
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-        }
-    ) { padding ->
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) {
         Column(
             modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(it)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Adicionar Nova Meta",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(24.dp))
 
             OutlinedTextField(
-                value = title.value,
-                onValueChange = { title.value = it },
-                label = { Text("Título da meta") },
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = description.value,
-                onValueChange = { description.value = it },
-                label = { Text("Descrição") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description (Optional)") },
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(16.dp))
 
-            Button(
-                onClick = { datePickerDialog.show() },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Data alvo: ${java.text.SimpleDateFormat("dd/MM/yyyy").format(targetDate.value)}")
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(onClick = { showDatePicker = true }) {
+                Text(text = selectedDate?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it) } ?: "Select Target Date")
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
-                    val newGoal = Goal(
-                        title = title.value,
-                        description = description.value,
-                        targetDate = Timestamp(targetDate.value)
-                    )
-                    viewModel.generatePlanForNewGoal(newGoal)
-                    navController.navigate("generated_plan")
+                    selectedDate?.let {
+                        viewModel.addGoal(title, description, it)
+                    }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                enabled = title.isNotBlank() && selectedDate != null
             ) {
-                Text("Gerar plano com IA")
+                Text("Add Goal")
             }
         }
     }
-}
 
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let {
+                            selectedDate = Date(it)
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}

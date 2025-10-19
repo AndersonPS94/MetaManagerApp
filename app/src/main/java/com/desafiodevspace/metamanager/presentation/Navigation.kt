@@ -24,7 +24,11 @@ fun Navigation(navController: NavHostController, modifier: Modifier = Modifier) 
                 GoalListScreen(navController = navController)
             }
             composable("add_goal") {
-                AddGoalScreen(navController = navController)
+                AddGoalScreen(onGoalAdded = {
+                    navController.navigate("goal_detail/$it") {
+                        popUpTo("goal_list")
+                    }
+                })
             }
             composable("generated_plan") {
                 GeneratedPlanScreen(navController = navController)
