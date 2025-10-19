@@ -28,7 +28,7 @@ As capturas de tela e a análise do projeto confirmam a implementação bem-suce
 | **Exclusão de Metas** | Funcionalidade para remover metas do sistema com confirmação de segurança. | ✅ Completo |
 | **Compartilhamento** | Opção para exportar o plano de leitura como texto para compartilhamento externo. | ✅ Completo |
 | **Insights de Progresso** | Tela de **Histórico e Analytics** exibindo o progresso total e métricas como "Dias Seguidos". | ✅ Completo |
-| **Assistente de Replanejamento** | Botão "Preciso de Ajuda" que solicita uma descrição do problema (ex: atraso) para que a IA possa sugerir um replanejamento ou dicas. | ✅ Completo |
+| **Assistente de Replanejamento** | Botão "Preciso de Ajuda" que solicita uma descrição do problema (ex: atraso) para que a IA possa sugerir um replanejamento ou dicas. | Desenvolvendo |
 | **Offline-first:** |Implementação de cache local para permitir o uso completo do aplicativo sem conexão, sincronizando os dados assim que a conectividade for restaurada. | ✅ Completo |
 
 ## 🛠️ Stack Tecnológica
