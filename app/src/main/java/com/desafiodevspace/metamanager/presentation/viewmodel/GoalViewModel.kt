@@ -113,7 +113,9 @@ class GoalViewModel @Inject constructor(
                 }
             }
         )
-        updateGoal(updatedGoal)
+        viewModelScope.launch {
+            updateGoalUseCase(updatedGoal)
+        }
     }
 
     fun addTask(goal: Goal, dailyTask: DailyTask, description: String) {
