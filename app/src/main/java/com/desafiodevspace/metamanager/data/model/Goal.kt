@@ -14,7 +14,7 @@ data class Goal(
     @DocumentId
     val id: String = "",
     val title: String = "",
-    val description: String? = null,
+    val description: String = "",
     val targetDate: Timestamp = Timestamp.now(),
     val dailyTasks: List<DailyTask> = emptyList()
 )

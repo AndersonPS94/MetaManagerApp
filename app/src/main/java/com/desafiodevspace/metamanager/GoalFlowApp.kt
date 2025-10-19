@@ -12,6 +12,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.desafiodevspace.metamanager.presentation.NotificationWorker
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -28,6 +29,9 @@ class GoalFlowApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
         createNotificationChannel()
         scheduleDailyNotifications()
     }

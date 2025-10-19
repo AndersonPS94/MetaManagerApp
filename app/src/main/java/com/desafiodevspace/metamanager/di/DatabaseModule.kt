@@ -2,8 +2,8 @@ package com.desafiodevspace.metamanager.di
 
 import android.content.Context
 import androidx.room.Room
-import com.desafiodevspace.metamanager.data.local.GoalDao
 import com.desafiodevspace.metamanager.data.local.GoalDatabase
+import com.desafiodevspace.metamanager.data.local.GoalDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,7 +22,9 @@ object DatabaseModule {
             context,
             GoalDatabase::class.java,
             "goal_database"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides

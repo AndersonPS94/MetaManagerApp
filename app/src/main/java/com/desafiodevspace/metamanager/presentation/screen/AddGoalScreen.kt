@@ -2,30 +2,22 @@ package com.desafiodevspace.metamanager.presentation.screen
 
 import android.app.DatePickerDialog
 import android.widget.DatePicker
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.desafiodevspace.metamanager.data.model.Goal
 import com.desafiodevspace.metamanager.presentation.viewmodel.GoalViewModel
 import com.google.firebase.Timestamp
-import java.util.Calendar
-import java.util.Date
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,33 +43,53 @@ fun AddGoalScreen(
     )
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Nova Meta") }) }
-    ) {
+        topBar = {
+            TopAppBar(
+                title = { Text("Nova Meta", fontWeight = FontWeight.Bold) },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(padding)
                 .padding(16.dp)
         ) {
+            Text(
+                text = "Adicionar Nova Meta",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(24.dp))
+
             OutlinedTextField(
                 value = title.value,
                 onValueChange = { title.value = it },
                 label = { Text("Título da meta") },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = description.value,
                 onValueChange = { description.value = it },
-                label = { Text("Descrição (opcional)") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Descrição") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                maxLines = 5
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Button(onClick = { datePickerDialog.show() }) {
+            Button(
+                onClick = { datePickerDialog.show() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
                 Text("Data alvo: ${java.text.SimpleDateFormat("dd/MM/yyyy").format(targetDate.value)}")
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
 
             Button(
                 onClick = {
@@ -89,10 +101,12 @@ fun AddGoalScreen(
                     viewModel.generatePlanForNewGoal(newGoal)
                     navController.navigate("generated_plan")
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Gerar plano com IA")
             }
         }
     }
 }
+

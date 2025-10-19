@@ -1,21 +1,12 @@
 package com.desafiodevspace.metamanager.presentation.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -31,23 +22,37 @@ fun AnalyticsScreen(
     val completedTasks by viewModel.completedTasks.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Analytics de Progresso") }) }
-    ) {
+        topBar = {
+            TopAppBar(
+                title = { Text("Analytics de Progresso") },
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(padding)
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Metas Concluídas", fontSize = 24.sp)
-            CircularProgressIndicator(progress = percentageOfCompletedGoals)
+            // ---------- Metas Concluídas ----------
+            Text("Metas Concluídas", fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            CircularProgressIndicator(
+                progress = percentageOfCompletedGoals,
+                strokeWidth = 8.dp,
+                modifier = Modifier.size(120.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Text("${(percentageOfCompletedGoals * 100).toInt()}%", fontSize = 20.sp)
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text("Tarefas Concluídas", fontSize = 24.sp)
+            // ---------- Tarefas Concluídas ----------
+            Text("Tarefas Concluídas", fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
             Text("$completedTasks / $totalTasks", fontSize = 20.sp)
         }
     }

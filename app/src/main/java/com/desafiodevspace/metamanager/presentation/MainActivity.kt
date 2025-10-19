@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             MetaManagerTheme {
                 val navController = rememberNavController()
@@ -37,15 +36,15 @@ class MainActivity : ComponentActivity() {
                             val items = listOf(BottomNavItem.Home, BottomNavItem.Progress)
 
                             items.forEach { screen ->
-                                val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                                // Lógica de seleção simplificada e corrigida
+                                val isSelected = currentDestination?.route == screen.route
+                                
                                 NavigationBarItem(
                                     icon = { Icon(screen.icon, contentDescription = screen.label) },
                                     label = { Text(screen.label) },
                                     selected = isSelected,
                                     onClick = {
-                                        // Navega para a rota inicial de cada aba
-                                        val destinationRoute = if (screen == BottomNavItem.Home) "goal_list" else "analytics"
-                                        navController.navigate(destinationRoute) {
+                                        navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true
                                             }
