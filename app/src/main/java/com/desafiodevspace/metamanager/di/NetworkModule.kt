@@ -1,6 +1,7 @@
 package com.desafiodevspace.metamanager.di
 
 import com.desafiodevspace.metamanager.data.remote.OpenAIApi
+import com.desafiodevspace.metamanager.data.remote.OpenAIService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,5 +48,12 @@ object NetworkModule {
     @Singleton
     fun provideOpenAIApi(retrofit: Retrofit): OpenAIApi {
         return retrofit.create(OpenAIApi::class.java)
+    }
+
+    // Adicionando o OpenAIService que faltava
+    @Provides
+    @Singleton
+    fun provideOpenAIService(retrofit: Retrofit): OpenAIService {
+        return retrofit.create(OpenAIService::class.java)
     }
 }

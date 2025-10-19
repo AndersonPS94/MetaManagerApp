@@ -3,6 +3,9 @@ package com.desafiodevspace.metamanager.presentation.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.desafiodevspace.metamanager.data.model.DailyTask
 import com.desafiodevspace.metamanager.data.model.Goal
 import com.desafiodevspace.metamanager.data.model.Task
@@ -13,15 +16,17 @@ import com.desafiodevspace.metamanager.domain.usecase.GetAllGoalsUseCase
 import com.desafiodevspace.metamanager.domain.usecase.GetHelpUseCase
 import com.desafiodevspace.metamanager.domain.usecase.ShareUseCase
 import com.desafiodevspace.metamanager.domain.usecase.UpdateGoalUseCase
+import com.desafiodevspace.metamanager.presentation.NotificationWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -67,8 +72,14 @@ class GoalViewModel @Inject constructor(
             try {
                 val targetDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(goal.targetDate.toDate())
                 _generatedPlan.value = generatePlanUseCase(goal.title, targetDate)
+            } catch (e: HttpException) {
+                if (e.code() == 429) {
+                    _generatedPlan.value = "Erro: Limite de requisições da API da OpenAI excedido. Verifique seu plano e detalhes de faturamento."
+                } else {
+                    _generatedPlan.value = "Erro de rede ao se comunicar com a IA. Tente novamente."
+                }
             } catch (e: Exception) {
-                // Handle error
+                _generatedPlan.value = "Ocorreu um erro inesperado ao gerar o plano. Tente novamente."
             } finally {
                 _isLoading.value = false
             }
@@ -82,14 +93,18 @@ class GoalViewModel @Inject constructor(
     fun saveGeneratedPlan() {
         viewModelScope.launch {
             val planText = _generatedPlan.value ?: return@launch
+            // Não salvar se o plano for uma mensagem de erro
+            if (planText.startsWith("Erro:")) return@launch
+
             val goalToSave = tempGoal ?: return@launch
 
             val dailyTasks = parsePlanToDailyTasks(planText)
             val finalGoal = goalToSave.copy(dailyTasks = dailyTasks)
 
             addGoalUseCase(finalGoal)
-            tempGoal = null // Limpa a meta temporária
-            _generatedPlan.value = null // Limpa o plano gerado
+            scheduleDailyNotifications()
+            tempGoal = null
+            _generatedPlan.value = null
         }
     }
 
@@ -148,12 +163,25 @@ class GoalViewModel @Inject constructor(
 
     fun getHelp(goal: Goal, situation: String) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 _helpSuggestion.value = getHelpUseCase(goal, situation)
+            } catch (e: HttpException) {
+                _helpSuggestion.value = "Erro: Limite de requisições da API da OpenAI excedido."
             } catch (e: Exception) {
-                // Handle error
+                _helpSuggestion.value = "Ocorreu um erro inesperado. Tente novamente."
+            } finally {
+                _isLoading.value = false
             }
         }
+    }
+
+    fun acceptHelpSuggestion(goal: Goal, suggestion: String) {
+        if (suggestion.startsWith("Erro:")) return
+        val newDailyTasks = parsePlanToDailyTasks(suggestion)
+        val updatedGoal = goal.copy(dailyTasks = newDailyTasks)
+        updateGoal(updatedGoal)
+        clearHelpSuggestion()
     }
 
     fun clearHelpSuggestion() {
@@ -164,9 +192,32 @@ class GoalViewModel @Inject constructor(
         shareUseCase(context, goal)
     }
 
+    fun calculateConsecutiveDays(goal: Goal): Int {
+        var consecutiveDays = 0
+        goal.dailyTasks.sortedBy { it.day }.forEach { dailyTask ->
+            if (dailyTask.tasks.isNotEmpty() && dailyTask.tasks.all { it.isCompleted }) {
+                consecutiveDays++
+            } else {
+                return consecutiveDays // A sequência é quebrada
+            }
+        }
+        return consecutiveDays
+    }
+
+    private fun scheduleDailyNotifications() {
+        val workRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "daily_goal_notification",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+
     private fun parsePlanToDailyTasks(planText: String): List<DailyTask> {
         val dailyTasks = mutableListOf<DailyTask>()
-        val days = planText.split("Dia ").filter { it.isNotBlank() }
+        val days = planText.split("Dia ", "Passo ").filter { it.isNotBlank() }
 
         for (dayContent in days) {
             val lines = dayContent.lines()

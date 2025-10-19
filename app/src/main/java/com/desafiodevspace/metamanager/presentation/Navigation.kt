@@ -24,11 +24,7 @@ fun Navigation(navController: NavHostController, modifier: Modifier = Modifier) 
                 GoalListScreen(navController = navController)
             }
             composable("add_goal") {
-                AddGoalScreen(onGoalAdded = {
-                    navController.navigate("goal_detail/$it") {
-                        popUpTo("goal_list")
-                    }
-                })
+                AddGoalScreen(navController = navController)
             }
             composable("generated_plan") {
                 GeneratedPlanScreen(navController = navController)
@@ -51,11 +47,21 @@ fun Navigation(navController: NavHostController, modifier: Modifier = Modifier) 
                     goalId = it.arguments?.getString("goalId")
                 )
             }
+            composable(
+                route = "analytics/{goalId}",
+                arguments = listOf(navArgument("goalId") { type = NavType.StringType })
+            ) {
+                AnalyticsScreen(
+                    goalId = it.arguments?.getString("goalId"),
+                    navController = navController
+                )
+            }
         }
 
         navigation(startDestination = "analytics_screen", route = BottomNavItem.Progress.route) {
             composable("analytics_screen") {
-                AnalyticsScreen()
+                // Esta pode ser uma tela de analytics geral no futuro
+                AnalyticsScreen(goalId = null, navController = navController)
             }
         }
     }
