@@ -128,9 +128,8 @@ class GoalViewModel @Inject constructor(
                 }
             }
         )
-        viewModelScope.launch {
-            updateGoalUseCase(updatedGoal)
-        }
+        // Chamada direta para a função que já gerencia o escopo da corrotina
+        updateGoal(updatedGoal)
     }
 
     fun addTask(goal: Goal, dailyTask: DailyTask, description: String) {
