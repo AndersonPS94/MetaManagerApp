@@ -12,6 +12,17 @@
 
 O projeto está em uma fase avançada de desenvolvimento, com todas as funcionalidades centrais de planejamento e acompanhamento já implementadas.
 
+## 📷 Screenshots
+<img width="200" height="3104" alt="Screenshot_20251019_144255" src="https://github.com/user-attachments/assets/002573bc-883c-4aaf-872f-2d8c5bb19b6d" />
+<img width="200" height="3104" alt="Screenshot_20251019_144411" src="https://github.com/user-attachments/assets/abb85157-804d-4bb5-bc18-6eae4c5753fb" />
+<img width="200" height="3104" alt="Screenshot_20251019_144219" src="https://github.com/user-attachments/assets/bd994515-e90e-4ada-b04e-30487daa8389" />
+<img width="200" height="3104" alt="Screenshot_20251019_144359" src="https://github.com/user-attachments/assets/ed6e23ca-ef98-49e4-83d3-d7d0dc9a3efe" />
+<img width="200" height="3104" alt="Screenshot_20251019_144148" src="https://github.com/user-attachments/assets/91a32ef4-cf4b-46ac-bc7a-aa3749b4ca9e" />
+<img width="200" height="3104" alt="Screenshot_20251019_144337" src="https://github.com/user-attachments/assets/2a24fb4f-555d-4220-b06d-83c0cec0725c" />
+<img width="200" height="3104" alt="Screenshot_20251019_144324" src="https://github.com/user-attachments/assets/bc4dff09-824d-473a-ab55-8f6ee96eb19b" />
+<img width="200" height="3104" alt="Screenshot_20251019_144702" src="https://github.com/user-attachments/assets/e366017e-5f81-42d9-9584-ef60856182a6" />
+
+
 ## ✨ Funcionalidades Implementadas
 
 As capturas de tela e a análise do projeto confirmam a implementação bem-sucedida das seguintes funcionalidades:
