@@ -1,27 +1,13 @@
 package com.desafiodevspace.metamanager.presentation.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -30,7 +16,7 @@ import com.desafiodevspace.metamanager.presentation.viewmodel.GoalViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GeneratedPlanScreen(
-    navController: NavController,
+    navController: NavController? = null, // opcional para preview
     viewModel: GoalViewModel = hiltViewModel()
 ) {
     val generatedPlan by viewModel.generatedPlan.collectAsState()
@@ -38,10 +24,10 @@ fun GeneratedPlanScreen(
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Seu plano diário") }) }
-    ) {
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(padding)
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -53,6 +39,7 @@ fun GeneratedPlanScreen(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
+                        .fillMaxWidth()
                 ) {
                     Text(text = generatedPlan ?: "Nenhum plano gerado.")
                 }
@@ -70,7 +57,7 @@ fun GeneratedPlanScreen(
                     Button(
                         onClick = {
                             viewModel.saveGeneratedPlan()
-                            navController.popBackStack("goal_list", inclusive = false)
+                            navController?.popBackStack("goal_list", inclusive = false)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -81,3 +68,4 @@ fun GeneratedPlanScreen(
         }
     }
 }
+

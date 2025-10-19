@@ -5,8 +5,9 @@ import com.desafiodevspace.metamanager.data.model.Goal
 import com.desafiodevspace.metamanager.domain.repository.GoalRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 
 class GoalRepositoryImpl @Inject constructor(
@@ -15,29 +16,52 @@ class GoalRepositoryImpl @Inject constructor(
 ) : GoalRepository {
 
     override fun getAllGoals(): Flow<List<Goal>> {
-        return goalDao.getAllGoals().onEach { 
-            // Quando o fluxo do Room for coletado, tentamos atualizar com dados do Firebase
-            val remoteGoals = firestore.collection("goals").get().await().toObjects(Goal::class.java)
-            goalDao.deleteAll()
-            goalDao.insertAll(remoteGoals)
+        return goalDao.getAllGoals().onStart { 
+            Timber.d("Iniciando sincronização única com o Firebase.")
+            try {
+                val remoteGoals = firestore.collection("goals").get().await().toObjects(Goal::class.java)
+                goalDao.deleteAll()
+                goalDao.insertAll(remoteGoals)
+                Timber.d("Sincronização com o Firebase concluída com sucesso.")
+            } catch (e: Exception) {
+                Timber.e(e, "Erro ao sincronizar metas com o Firebase")
+            }
         }
     }
 
     override suspend fun addGoal(goal: Goal): String {
-        val documentReference = firestore.collection("goals").add(goal).await()
-        // Atualiza o Goal com o ID gerado e salva no Room
-        val newGoal = goal.copy(id = documentReference.id)
-        goalDao.insert(newGoal)
-        return documentReference.id
+        Timber.d("Adicionando nova meta")
+        return try {
+            val documentReference = firestore.collection("goals").add(goal).await()
+            val newGoal = goal.copy(id = documentReference.id)
+            goalDao.insert(newGoal)
+            Timber.d("Meta adicionada com sucesso no Firebase e Room. ID: %s", documentReference.id)
+            documentReference.id
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao adicionar meta")
+            ""
+        }
     }
 
     override suspend fun updateGoal(goal: Goal) {
-        firestore.collection("goals").document(goal.id).set(goal).await()
-        goalDao.insert(goal) // O OnConflictStrategy.REPLACE cuida da atualização
+        Timber.d("Atualizando meta com ID: %s", goal.id)
+        try {
+            firestore.collection("goals").document(goal.id).set(goal).await()
+            goalDao.insert(goal)
+            Timber.d("Meta atualizada com sucesso no Firebase e Room.")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao atualizar meta")
+        }
     }
 
     override suspend fun deleteGoal(goal: Goal) {
-        firestore.collection("goals").document(goal.id).delete().await()
-        // A sincronização no getAllGoals() cuidará da remoção no Room
+        Timber.d("Excluindo meta com ID: %s", goal.id)
+        try {
+            firestore.collection("goals").document(goal.id).delete().await()
+             // A remoção do Room será refletida automaticamente pelo fluxo.
+            Timber.d("Meta excluída com sucesso do Firebase.")
+        } catch (e: Exception) {
+            Timber.e(e, "Erro ao excluir meta do Firebase")
+        }
     }
 }

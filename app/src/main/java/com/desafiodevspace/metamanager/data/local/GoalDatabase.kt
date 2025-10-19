@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.desafiodevspace.metamanager.data.model.Goal
 
-@Database(entities = [Goal::class], version = 1)
+@Database(entities = [Goal::class], version = 2)
 @TypeConverters(Converters::class)
 abstract class GoalDatabase : RoomDatabase() {
     abstract fun goalDao(): GoalDao

@@ -1,15 +1,15 @@
 package com.desafiodevspace.metamanager.data.remote
 
-import com.desafiodevspace.metamanager.data.remote.dto.OpenAIRequest
-import com.desafiodevspace.metamanager.data.remote.dto.OpenAIResponse
+import com.desafiodevspace.metamanager.data.remote.dto.ChatCompletionRequest
+import com.desafiodevspace.metamanager.data.remote.dto.ChatCompletionResponse
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface OpenAIApi {
-    @POST("v1/completions")
-    suspend fun getCompletion(
+    @POST("v1/chat/completions")
+    suspend fun createChatCompletion(
         @Header("Authorization") apiKey: String,
-        @Body request: OpenAIRequest
-    ): OpenAIResponse
+        @Body request: ChatCompletionRequest
+    ): ChatCompletionResponse
 }
