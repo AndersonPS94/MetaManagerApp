@@ -16,10 +16,13 @@ class GoalRepositoryImpl @Inject constructor(
 ) : GoalRepository {
 
     override fun getAllGoals(): Flow<List<Goal>> {
-        return goalDao.getAllGoals().onStart { 
+        return goalDao.getAllGoals().onStart {
             Timber.d("Iniciando sincronização única com o Firebase.")
             try {
-                val remoteGoals = firestore.collection("goals").get().await().toObjects(Goal::class.java)
+                val snapshot = firestore.collection("goals").get().await()
+                val remoteGoals = snapshot.documents.mapNotNull { document ->
+                    document.toObject(Goal::class.java)?.copy(id = document.id)
+                }
                 goalDao.deleteAll()
                 goalDao.insertAll(remoteGoals)
                 Timber.d("Sincronização com o Firebase concluída com sucesso.")
@@ -34,7 +37,7 @@ class GoalRepositoryImpl @Inject constructor(
         return try {
             val documentReference = firestore.collection("goals").add(goal).await()
             val newGoal = goal.copy(id = documentReference.id)
-            goalDao.insert(newGoal)
+            goalDao.insert(newGoal) // Adiciona ao Room com o ID do Firebase
             Timber.d("Meta adicionada com sucesso no Firebase e Room. ID: %s", documentReference.id)
             documentReference.id
         } catch (e: Exception) {
@@ -46,9 +49,9 @@ class GoalRepositoryImpl @Inject constructor(
     override suspend fun updateGoal(goal: Goal) {
         Timber.d("Atualizando meta com ID: %s", goal.id)
         try {
+            goalDao.insert(goal) // Atualiza o Room primeiro para feedback imediato na UI
             firestore.collection("goals").document(goal.id).set(goal).await()
-            goalDao.insert(goal)
-            Timber.d("Meta atualizada com sucesso no Firebase e Room.")
+            Timber.d("Meta atualizada com sucesso no Room e Firebase.")
         } catch (e: Exception) {
             Timber.e(e, "Erro ao atualizar meta")
         }
@@ -57,11 +60,11 @@ class GoalRepositoryImpl @Inject constructor(
     override suspend fun deleteGoal(goal: Goal) {
         Timber.d("Excluindo meta com ID: %s", goal.id)
         try {
+            goalDao.delete(goal) // Deleta do Room primeiro
             firestore.collection("goals").document(goal.id).delete().await()
-             // A remoção do Room será refletida automaticamente pelo fluxo.
-            Timber.d("Meta excluída com sucesso do Firebase.")
+            Timber.d("Meta excluída com sucesso do Room e Firebase.")
         } catch (e: Exception) {
-            Timber.e(e, "Erro ao excluir meta do Firebase")
+            Timber.e(e, "Erro ao excluir meta")
         }
     }
 }
