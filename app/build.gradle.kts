@@ -29,7 +29,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.desafiodevspace.metamanager.HiltTestRunner"
 
         val openaiApiKey = localProperties.getProperty("OPENAI_API_KEY") ?: ""
         buildConfigField("String", "OPENAI_API_KEY", "\"$openaiApiKey\"")
@@ -94,6 +94,14 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:1.13.12")
+
+    // Hilt Testing
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
+
+    // WorkManager Testing
+    androidTestImplementation(libs.androidx.work.testing)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
