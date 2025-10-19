@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tema principal do aplicativo, referenciado no AndroidManifest -->
-    <style name="Theme.MetaManager" parent="android:Theme.Material.Light.NoActionBar" />
 
-    <!-- Tema da Splash Screen -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@android:color/white</item>
+        <item name="windowSplashScreenBackground">#141A2B</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/appicon</item>
         <item name="android:windowSplashScreenBrandingImage">@drawable/brandimage</item>
         <item name="postSplashScreenTheme">@style/Theme.MetaManager</item>
