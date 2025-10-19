@@ -1,8 +1,11 @@
 package com.desafiodevspace.metamanager.data.remote.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class OpenAIRequest(
     val model: String,
     val prompt: String,
-    val max_tokens: Int,
+    @SerializedName("max_tokens")
+    val maxTokens: Int,
     val temperature: Double
 )
